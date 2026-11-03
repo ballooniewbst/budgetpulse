@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BudgetPulse</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💚</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{
+  --slate-900:#0f1b2a; --slate-800:#17283b; --slate-600:#475a70; --slate-400:#8a99ab;
+  --bg:#eef1f4; --card:#ffffff; --line:#dde3ea;
+  --emerald:#10b981; --emerald-dark:#047857; --emerald-soft:#d9f5ea;
+  --danger:#d64545; --danger-soft:#fde8e8;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 1px 2px rgba(15,27,42,.06),0 8px 24px -12px rgba(15,27,42,.18);
+  --font:'Bricolage Grotesque',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;margin:0}
+body{font-family:var(--font);background:var(--bg);color:var(--slate-900);line-height:1.5;min-height:100vh}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--emerald);outline-offset:2px}
+.top{background:var(--slate-900);color:#fff;padding:28px 20px 96px}
+.wrap{max-width:1120px;margin:0 auto}
+.bar{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.brand{display:flex;align-items:center;gap:12px}
+.brand svg{width:44px;height:28px}
+.brand h1{font-size:1.7rem;font-weight:800;letter-spacing:-.02em}
+.brand p{color:var(--slate-400);font-size:.9rem}
+.pick{display:flex;align-items:center;gap:10px;font-size:.9rem;color:#c5cfdb}
+.picks{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+.btn.small{padding:9px 16px;font-size:.9rem}
+.top .btn.ghost{border-color:#2b4058;color:#c5cfdb}
+.top .btn.ghost:hover{background:var(--slate-800)}
+.savemsg{font-size:.85rem;color:#7ee0bb;min-height:1.2em}
+.login{display:none;min-height:100vh;place-items:center;padding:20px;background:var(--slate-900)}
+.locked .login{display:grid}
+.locked header.top,.locked main{display:none}
+.login form{grid-template-columns:1fr;width:min(380px,100%);gap:16px;padding:28px}
+.login .brand{margin-bottom:2px}
+.login .brand svg{width:44px;height:28px}
+.login p.sub{color:var(--slate-600);font-size:.92rem;margin-top:-6px}
+.chk{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.login .err{color:var(--danger);font-size:.88rem;min-height:1.3em}
+.pick select{background:var(--slate-800);border:1px solid #2b4058;color:#fff;padding:10px 14px;border-radius:var(--radius-sm);min-width:170px}
+main{max-width:1120px;margin:-68px auto 48px;padding:0 20px;display:grid;gap:20px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px}
+.stat span.l{font-size:.9rem;color:var(--slate-600)}
+.stat .v{font-size:1.7rem;font-weight:800;letter-spacing:-.02em;margin-top:4px;overflow-wrap:anywhere;line-height:1.25}
+.stat .v em,.inc em{font-style:normal;font-size:.8rem;font-weight:600;color:var(--slate-600);margin-left:6px;letter-spacing:0}
+.stat.net .v em{color:#c8f3e2}
+.stat.net .v.neg{color:#ffd1d1}
+.cardhead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.cardhead h2{margin:0}
+.cardhead select{padding:7px 10px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#f8fafb}
+.stat small{color:var(--slate-600);font-size:.85rem}
+.stat.net{background:var(--emerald-dark);color:#fff}
+.stat.net span.l,.stat.net small{color:#c8f3e2}
+.stat.net.neg{background:var(--danger)}
+.stat.net.neg span.l,.stat.net.neg small{color:#fde8e8}
+.inc{display:flex;align-items:center;gap:6px;margin-top:6px}
+.inc b{font-size:1.7rem;font-weight:800}
+.inc input{width:100%;font-size:1.7rem;font-weight:800;border:0;border-bottom:2px dashed var(--line);background:transparent;padding:0 0 2px;letter-spacing:-.02em;min-width:0}
+.inc input:focus{outline:0;border-bottom-color:var(--emerald)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+h2{font-size:1.15rem;font-weight:600;margin-bottom:14px}
+form{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:grid;gap:6px;font-size:.88rem;color:var(--slate-600)}
+label.full,.actions{grid-column:1/-1}
+input[type=text],input[type=password],input[type=number],input[type=date],form select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius-sm);background:#f8fafb;color:var(--slate-900)}
+.actions{display:flex;gap:10px}
+.btn{border:0;border-radius:var(--radius-sm);padding:12px 20px;font-weight:600;cursor:pointer;background:var(--emerald);color:#04281c;transition:background .15s}
+.btn:hover{background:#0ea371}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--slate-600)}
+.btn.ghost:hover{background:var(--bg)}
+.chartbox{position:relative;height:300px;display:grid;place-items:center}
+.empty{color:var(--slate-400);text-align:center;padding:24px;max-width:30ch}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:12px;font-size:.85rem;color:var(--slate-600)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.list{max-height:420px;overflow:auto;border:1px solid var(--line);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th{position:sticky;top:0;background:#f4f6f8;text-align:left;font-weight:600;color:var(--slate-600);padding:10px 14px;font-size:.85rem}
+td{padding:12px 14px;border-top:1px solid var(--line);vertical-align:middle}
+td.amt{font-weight:600;white-space:nowrap}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:99px;background:var(--bg);font-size:.82rem}
+.tag i{width:8px;height:8px;border-radius:50%}
+.tag.sav{background:var(--emerald-soft);color:var(--emerald-dark)}
+.row-actions{display:flex;gap:6px;justify-content:flex-end}
+.ic{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:.82rem;color:var(--slate-600)}
+.ic:hover{background:var(--bg)}
+.ic.del:hover{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-soft)}
+tr.editing td{background:var(--emerald-soft)}
+.none{padding:32px;text-align:center;color:var(--slate-400)}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.stat .v,.inc input,.inc b{font-size:1.6rem}}
+@media(max-width:560px){form{grid-template-columns:1fr}th:nth-child(3),td:nth-child(3){display:none}.top{padding-bottom:88px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body class="locked">
+<section class="login" id="login">
+  <form class="card" id="loginForm">
+    <div class="brand" style="color:var(--slate-900)">
+      <svg viewBox="0 0 44 28" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 15h9l4-11 6 21 5-14 3 4h13"/></svg>
+      <h1>BudgetPulse</h1>
+    </div>
+    <p class="sub">Log in to open your budget.</p>
+    <label>Username<input id="user" type="text" autocomplete="username" required autocapitalize="off" spellcheck="false"></label>
+    <label>Password<input id="pass" type="password" autocomplete="current-password" autocapitalize="none" autocorrect="off" spellcheck="false" required></label>
+    <label class="chk"><input type="checkbox" id="showPass"> Show password</label>
+    <p class="err" id="loginErr" role="alert"></p>
+    <button class="btn" type="submit">Log in</button>
+  </form>
+</section>
+<header class="top"><div class="wrap bar">
+  <div class="brand">
+    <svg viewBox="0 0 44 28" fill="none" stroke="#10b981" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 15h9l4-11 6 21 5-14 3 4h13"/></svg>
+    <div><h1>BudgetPulse</h1><p>Know where every dollar goes.</p></div>
+  </div>
+  <div class="picks">
+    <label class="pick">Month
+      <select id="month" aria-label="Filter by month"></select>
+    </label>
+    <button class="btn small" id="save" type="button">Save</button>
+    <button class="btn small ghost" id="logout" type="button">Log out</button>
+    <span class="savemsg" id="saveMsg" role="status" aria-live="polite"></span>
+  </div>
+</div></header>
+
+<main>
+  <section class="cards" aria-label="Monthly summary">
+    <div class="card stat"><span class="l">Total budget</span>
+      <div class="inc"><b>$</b><input id="incUSD" type="number" min="0" step="0.01" placeholder="0.00" aria-label="Total budget in US dollars"><em>USD</em></div>
+      <div class="inc"><b>₱</b><input id="incPHP" type="number" min="0" step="0.01" placeholder="0.00" aria-label="Total budget in Philippine pesos"><em>PHP</em></div>
+      <small>One fixed budget for each currency</small></div>
+    <div class="card stat"><span class="l">Total spent</span><div class="v"><span id="expUSD">$0.00</span><em>USD</em></div><div class="v"><span id="expPHP">₱0.00</span><em>PHP</em></div><small id="expNote">&nbsp;</small></div>
+    <div class="card stat net" id="netCard"><span class="l">Remaining budget</span><div class="v" id="netUSDrow"><span id="netUSD">$0.00</span><em>USD</em></div><div class="v" id="netPHProw"><span id="netPHP">₱0.00</span><em>PHP</em></div><small>Budget minus everything spent</small></div>
+  </section>
+
+  <div class="grid">
+    <section class="card">
+      <h2 id="formTitle">Add expense</h2>
+      <form id="form">
+        <label class="full">Title<input id="title" type="text" maxlength="60" required placeholder="e.g. Groceries"></label>
+        <label>Amount<input id="amount" type="number" min="0.01" step="0.01" required placeholder="0.00"></label>
+        <label>Currency<select id="cur"><option value="USD">USD ($)</option><option value="PHP">PHP (₱)</option></select></label>
+        <label>Date<input id="date" type="date" required></label>
+        <label>Category<select id="cat"></select></label>
+        <div class="actions">
+          <button class="btn" id="submitBtn" type="submit">Add expense</button>
+          <button class="btn ghost" id="cancel" type="button" hidden>Cancel</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card">
+      <div class="cardhead"><h2>Spending by category</h2><select id="chartCur" aria-label="Chart currency"><option value="USD">USD ($)</option><option value="PHP">PHP (₱)</option></select></div>
+      <div class="chartbox">
+        <canvas id="chart" aria-label="Pie chart of spending by category" role="img"></canvas>
+        <p class="empty" id="chartEmpty" hidden>No spending in this currency for this month yet. Add an expense to see the breakdown.</p>
+      </div>
+      <div class="legend" id="legend"></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <h2>Transactions</h2>
+    <div class="list">
+      <table>
+        <thead><tr><th>Title</th><th>Amount</th><th>Category</th><th>Date</th><th></th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <div class="none" id="none" hidden>No transactions for this month.</div>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  var KEY='budgetpulse.v1';
+  var CATS={Housing:'#334e68',Food:'#f59e0b',Transport:'#3b82f6',Utilities:'#8b5cf6',Entertainment:'#ec4899',Savings:'#10b981'};
+  var state={tx:[],income:{}};
+  try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&Array.isArray(s.tx)){state=s;state.income=state.income||{};}}catch(e){}
+  var $=function(id){return document.getElementById(id)};
+  var CUR={USD:{locale:'en-US',sym:'$'},PHP:{locale:'en-PH',sym:'₱'}};
+  var legacy=CUR[state.currency]?state.currency:'USD';
+  state.tx.forEach(function(t){if(!CUR[t.cur])t.cur=legacy});
+  Object.keys(state.income).forEach(function(m){if(typeof state.income[m]==='number'){var o={};o[legacy]=state.income[m];state.income[m]=o}});
+  if(!CUR[state.chartCur])state.chartCur=legacy;
+  if(!state.budget||typeof state.budget!=='object'){var ks=Object.keys(state.income).sort();state.budget=ks.length?Object.assign({},state.income[ks[ks.length-1]]):{}}
+  var money=function(n,c){return n.toLocaleString(CUR[c].locale,{style:'currency',currency:c})};
+  var today=function(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+  var monthOf=function(d){return d.slice(0,7)};
+  var label=function(m){var p=m.split('-');return new Date(p[0],p[1]-1,1).toLocaleDateString('en-US',{month:'long',year:'numeric'})};
+  var esc=function(t){return String(t).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+  var save=function(){try{localStorage.setItem(KEY,JSON.stringify(state));return true}catch(e){return false}};
+  var editId=null, current=monthOf(today()), chart=null;
+
+  $('cat').innerHTML=Object.keys(CATS).map(function(c){return '<option>'+c+'</option>'}).join('');
+  $('date').value=today();
+
+  function months(){
+    var set={};set[monthOf(today())]=1;set[current]=1;
+    state.tx.forEach(function(t){set[monthOf(t.date)]=1});
+    return Object.keys(set).sort().reverse();
+  }
+  function renderSelect(){
+    $('month').innerHTML=months().map(function(m){return '<option value="'+m+'"'+(m===current?' selected':'')+'>'+label(m)+'</option>'}).join('');
+  }
+
+  function render(){
+    renderSelect();
+    var list=state.tx.filter(function(t){return monthOf(t.date)===current}).sort(function(a,b){return b.date.localeCompare(a.date)});
+    var mon={USD:0,PHP:0},all={USD:0,PHP:0},by={},cc=state.chartCur,total=0;
+    state.tx.forEach(function(t){all[t.cur]+=t.amount});
+    list.forEach(function(t){mon[t.cur]+=t.amount;if(t.cur===cc){by[t.cat]=(by[t.cat]||0)+t.amount;total+=t.amount}});
+    ['USD','PHP'].forEach(function(c){
+      var bud=state.budget[c]||0,n=bud-all[c];
+      if(document.activeElement!==$('inc'+c))$('inc'+c).value=bud||'';
+      $('exp'+c).textContent=money(all[c],c);
+      $('net'+c).textContent=money(n,c);
+      $('net'+c+'row').classList.toggle('neg',n<0);
+    });
+    $('expNote').textContent=label(current)+': '+money(mon.USD,'USD')+' and '+money(mon.PHP,'PHP');
+    $('chartCur').value=cc;
+
+    $('rows').innerHTML=list.map(function(t){
+      return '<tr class="'+(t.id===editId?'editing':'')+'"><td>'+esc(t.title)+'</td><td class="amt">'+money(t.amount,t.cur)+'</td>'+
+      '<td><span class="tag'+(t.cat==='Savings'?' sav':'')+'"><i style="background:'+CATS[t.cat]+'"></i>'+t.cat+'</span></td>'+
+      '<td>'+new Date(t.date+'T00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})+'</td>'+
+      '<td><div class="row-actions"><button class="ic" data-edit="'+t.id+'" aria-label="Edit '+esc(t.title)+'">Edit</button><button class="ic del" data-del="'+t.id+'" aria-label="Delete '+esc(t.title)+'">Delete</button></div></td></tr>';
+    }).join('');
+    $('none').hidden=list.length>0;
+
+    var keys=Object.keys(by);
+    $('chartEmpty').hidden=keys.length>0;
+    $('chart').style.display=keys.length?'block':'none';
+    $('legend').innerHTML=keys.map(function(k){return '<span><i style="background:'+CATS[k]+'"></i>'+k+' '+Math.round(by[k]/total*100)+'%</span>'}).join('');
+    if(!window.Chart)return;
+    var data={labels:keys,datasets:[{data:keys.map(function(k){return by[k]}),backgroundColor:keys.map(function(k){return CATS[k]}),borderColor:'#fff',borderWidth:3}]};
+    if(chart){chart.data=data;chart.update();}
+    else chart=new Chart($('chart'),{type:'pie',data:data,options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){var sum=c.dataset.data.reduce(function(a,b){return a+b},0);return ' '+c.label+': '+money(c.parsed,state.chartCur)+' ('+(c.parsed/sum*100).toFixed(1)+'%)'}}}}}});
+  }
+
+  function resetForm(){
+    editId=null;$('form').reset();$('date').value=today();
+    $('formTitle').textContent='Add expense';$('submitBtn').textContent='Add expense';$('cancel').hidden=true;
+  }
+
+  $('form').addEventListener('submit',function(e){
+    e.preventDefault();
+    var amt=parseFloat($('amount').value);
+    if(!(amt>0)||!$('title').value.trim())return;
+    var rec={title:$('title').value.trim(),cur:$('cur').value,amount:Math.round(amt*100)/100,cat:$('cat').value,date:$('date').value};
+    if(editId){state.tx=state.tx.map(function(t){return t.id===editId?Object.assign({id:editId},rec):t})}
+    else state.tx.push(Object.assign({id:Date.now().toString(36)+Math.random().toString(36).slice(2,6)},rec));
+    current=monthOf(rec.date);state.chartCur=rec.cur;
+    save();resetForm();render();
+  });
+  $('cancel').addEventListener('click',function(){resetForm();render()});
+  $('rows').addEventListener('click',function(e){
+    var b=e.target.closest('button');if(!b)return;
+    if(b.dataset.del){
+      if(!confirm('Delete this transaction?'))return;
+      state.tx=state.tx.filter(function(t){return t.id!==b.dataset.del});
+      if(editId===b.dataset.del)resetForm();
+      save();render();
+    }else if(b.dataset.edit){
+      var t=state.tx.find(function(x){return x.id===b.dataset.edit});if(!t)return;
+      editId=t.id;$('title').value=t.title;$('amount').value=t.amount;$('cat').value=t.cat;$('cur').value=t.cur;$('date').value=t.date;
+      $('formTitle').textContent='Edit expense';$('submitBtn').textContent='Save changes';$('cancel').hidden=false;
+      $('form').scrollIntoView({behavior:'smooth',block:'center'});$('title').focus();render();
+    }
+  });
+  $('month').addEventListener('change',function(){current=this.value;render()});
+  $('chartCur').addEventListener('change',function(){state.chartCur=this.value;save();render()});
+  ['USD','PHP'].forEach(function(c){
+    $('inc'+c).addEventListener('input',function(){
+      var v=parseFloat(this.value);
+      if(v>0)state.budget[c]=v;else delete state.budget[c];
+      save();render();
+    });
+  });
+  var SALT='budgetpulse',HASH='6cc62f5f007f7e14efae7e59a6b3b7f94cf5ef619834297a22df2923934db002';
+  var sha=function(t){return crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)).then(function(b){return Array.from(new Uint8Array(b)).map(function(x){return x.toString(16).padStart(2,'0')}).join('')})};
+  var authed=function(){try{return sessionStorage.getItem('bp.auth')==='1'}catch(e){return false}};
+  if(authed())document.body.classList.remove('locked');
+  $('loginForm').addEventListener('submit',function(e){
+    e.preventDefault();
+    if(!window.crypto||!crypto.subtle){$('loginErr').textContent='Log in needs a secure page. Open the site from its https GitHub Pages link.';return}
+    sha(SALT+':'+$('user').value.trim().toLowerCase()+':'+$('pass').value.trim()).then(function(h){
+      if(h===HASH){
+        try{sessionStorage.setItem('bp.auth','1')}catch(x){}
+        $('loginErr').textContent='';$('pass').value='';
+        document.body.classList.remove('locked');render();if(chart)chart.resize();
+      }else setTimeout(function(){$('loginErr').textContent='Username or password is incorrect.';$('pass').select()},500);
+    });
+  });
+  $('logout').addEventListener('click',function(){
+    try{sessionStorage.removeItem('bp.auth')}catch(x){}
+    document.body.classList.add('locked');$('user').value='';$('user').focus();
+  });
+  $('showPass').addEventListener('change',function(){$('pass').type=this.checked?'text':'password'});
+  var msgT;
+  $('save').addEventListener('click',function(){
+    var ok=save(),d=new Date();
+    $('saveMsg').textContent=ok?'Saved at '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):'Could not save. Browser storage is blocked.';
+    clearTimeout(msgT);msgT=setTimeout(function(){$('saveMsg').textContent=''},4000);
+  });
+  render();
+  window.addEventListener('load',function(){if(!chart)render()});
+})();
+</script>
+</body>
+</html>
